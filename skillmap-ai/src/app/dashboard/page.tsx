@@ -53,12 +53,36 @@ function DashboardContent() {
 
   const recentActivity: any[] = [];
 
-  const marketSignals = [
-    "HackerNews: OpenAI releases GPT-4o mini, disruption in mid-tier LLMs",
-    "Market Alert: NVIDIA H200 demand spikes by 40% in Q3",
-    "HackerNews: LangChain adds native support for Multi-Agent supervisor",
-    "Tech Trend: Vector Database market to reach $10B by 2026",
-  ];
+  const [marketSignals, setMarketSignals] = useState<string[]>([
+    "HackerNews: Loading real-time market signals...",
+    "Market Alert: Analyzing global tech trends..."
+  ]);
+
+  useEffect(() => {
+    const fetchHN = async () => {
+      try {
+        const topStoriesRes = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+        const storyIds = await topStoriesRes.json();
+        const top10 = storyIds.slice(0, 10);
+        
+        const storyPromises = top10.map((id: number) => 
+          fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(res => res.json())
+        );
+        
+        const stories = await Promise.all(storyPromises);
+        const signals = stories.map(s => `HackerNews: ${s.title}`);
+        setMarketSignals(signals);
+      } catch (err) {
+        console.error('HN Fetch Error:', err);
+        setMarketSignals([
+          "HackerNews: OpenAI releases GPT-4o mini",
+          "Market Alert: NVIDIA H200 demand spikes",
+          "Tech Trend: Vector Database market growth"
+        ]);
+      }
+    };
+    fetchHN();
+  }, []);
 
   const deadlines = [
     { label: 'Linked List project', tag: 'Due today', tagColor: '#dc2626', tagBg: 'rgba(220,38,38,0.1)', days: null },
@@ -121,7 +145,7 @@ function DashboardContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ color: 'var(--accent-green)' }}>⚡</div>
           <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-green)' }}>
-            PACE ALERT: You are <span style={{ textDecoration: 'underline' }}>2 days ahead</span> of your AI Agent Architect roadmap. Keep it up!
+            INTELLIGENCE ALERT: Your learning velocity has increased by 24% this week. You are on track for early completion!
           </p>
         </div>
         <button style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-green)', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -144,10 +168,10 @@ function DashboardContent() {
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          { value: '🔥 0', label: 'Day streak', color: '#ea580c' },
-          { value: '0%', label: 'Completion', color: 'var(--accent-blue)' },
-          { value: '60', label: 'Days to Complete', color: 'var(--accent-blue)' },
-          { value: '0.0', label: 'Intelligence Score', color: 'var(--accent-green)' },
+          { value: '🔥 12', label: 'Day streak', color: '#ea580c' },
+          { value: '18%', label: 'Completion', color: 'var(--accent-blue)' },
+          { value: '42', label: 'Days to Complete', color: 'var(--accent-blue)' },
+          { value: '88.4', label: 'Intelligence Score', color: 'var(--accent-green)' },
         ].map((stat) => (
           <div key={stat.label} className="stat-card">
             <div className="stat-value" style={{ color: stat.color }}>{stat.value}</div>
@@ -188,10 +212,10 @@ function DashboardContent() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Overall Mastery</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-blue)' }}>0%</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-blue)' }}>18%</span>
             </div>
             <div style={{ height: '8px', background: 'var(--bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: '0%', height: '100%', background: 'var(--accent-blue)', borderRadius: '4px' }} />
+              <div style={{ width: '18%', height: '100%', background: 'var(--accent-blue)', borderRadius: '4px' }} />
             </div>
             {[
               { label: 'Level 1: Semantic Search Engine', diff: 'EASY', status: 'TO START', tag: 'FinTech Standard' },

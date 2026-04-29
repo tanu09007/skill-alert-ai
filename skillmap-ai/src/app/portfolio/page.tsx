@@ -37,8 +37,13 @@ export default function Portfolio() {
   const [userSkills, setUserSkills] = useState<string[]>(['AI', 'ML', 'Python', 'React']);
   const [initials, setInitials] = useState<string>('JD');
   const [projects, setProjects] = useState<Project[]>([]);
-  
-  const GITHUB_USERNAME = 'shritanu16007-ctrl';
+  const [githubUser, setGithubUser] = useState<string>('shritanu16007-ctrl');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  useEffect(() => {
+    const savedGithub = localStorage.getItem('nexes_github_user');
+    if (savedGithub) setGithubUser(savedGithub);
+  }, []);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -77,19 +82,17 @@ export default function Portfolio() {
       // Fetch GitHub Profile & Repos
       try {
         const [userRes, repoRes] = await Promise.all([
-          fetch(`https://api.github.com/users/${GITHUB_USERNAME}`),
-          fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=6`)
+          fetch(`https://api.github.com/users/${githubUser}`),
+          fetch(`https://api.github.com/users/${githubUser}/repos?sort=updated&per_page=6`)
         ]);
         
         const userData = await userRes.json();
         const repos = await repoRes.json();
         
         if (userData && !userData.message) {
-          if (!savedName) {
-            setUserName(userData.name || GITHUB_USERNAME);
-            const ini = (userData.name || GITHUB_USERNAME).split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-            setInitials(ini);
-          }
+          setUserName(userData.name || githubUser);
+          const ini = (userData.name || githubUser).split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+          setInitials(ini);
           if (userData.bio) setUserRole(userData.bio);
         }
 
@@ -115,7 +118,18 @@ export default function Portfolio() {
     };
 
     fetchAllData();
-  }, []);
+  }, [githubUser]);
+
+  const handleGithubUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newUser = formData.get('github_username') as string;
+    if (newUser) {
+      setGithubUser(newUser);
+      localStorage.setItem('nexes_github_user', newUser);
+      setIsEditing(false);
+    }
+  };
 
   const handleShare = () => {
     setCopied(true);
@@ -190,6 +204,32 @@ export default function Portfolio() {
                     </Badge>
                   ))}
                 </div>
+              </div>
+              <div className="space-y-4 pt-4">
+                {isEditing ? (
+                  <form onSubmit={handleGithubUpdate} className="space-y-2">
+                    <input 
+                      name="github_username"
+                      defaultValue={githubUser}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                      placeholder="Enter GitHub Username"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <Button type="submit" size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-8 text-[10px] rounded-lg w-full">Save</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="h-8 text-[10px] rounded-lg w-full">Cancel</Button>
+                    </div>
+                  </form>
+                ) : (
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    variant="outline" 
+                    className="w-full border-white/10 text-white/40 hover:text-white hover:bg-white/5 h-10 rounded-xl text-[10px] flex items-center justify-center gap-2"
+                  >
+                    <GitBranch className="w-3.5 h-3.5" />
+                    Connected: @{githubUser}
+                  </Button>
+                )}
               </div>
             </div>
           </Card>

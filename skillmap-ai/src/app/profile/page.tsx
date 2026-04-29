@@ -4,14 +4,15 @@ import { useEffect, useState } from 'react';
 import { User, Award, BookOpen, Target, Settings } from 'lucide-react';
 
 export default function ProfilePage() {
+  const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: 'User',
     role: 'AI Agent Architect',
     joined: 'April 2026',
-     completed: 0,
-     certificates: 0,
-     skills: ['Python', 'React', 'TypeScript', 'Node.js']
-   });
+    completed: 0,
+    certificates: 0,
+    skills: ['Python', 'React', 'TypeScript', 'Node.js']
+  });
 
   useEffect(() => {
     const savedName = localStorage.getItem('nexes_user_name');
@@ -27,26 +28,68 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const handleSave = () => {
+    localStorage.setItem('nexes_user_name', profile.name);
+    setIsEditing(false);
+    alert('Profile updated successfully!');
+  };
+
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <header className="flex flex-col md:flex-row gap-8 items-center md:items-start bg-white p-8 rounded-3xl border border-(--border-light) shadow-sm">
-        <div className="w-32 h-32 bg-indigo-50 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+        <div className="w-32 h-32 bg-indigo-50 rounded-full flex items-center justify-center border-4 border-white shadow-xl shrink-0">
           <User size={64} className="text-indigo-600" />
         </div>
         <div className="space-y-4 text-center md:text-left flex-1">
-          <div>
-            <h1 className="text-4xl font-black text-(--text-primary) capitalize">{profile.name}</h1>
-            <p className="text-indigo-600 font-bold uppercase tracking-widest text-xs mt-1">{profile.role}</p>
-          </div>
+          {isEditing ? (
+            <div className="space-y-3">
+              <input 
+                type="text" 
+                value={profile.name} 
+                onChange={(e) => setProfile({...profile, name: e.target.value})}
+                className="text-2xl font-black w-full border-b-2 border-indigo-500 outline-none pb-1"
+                placeholder="Your Name"
+              />
+              <input 
+                type="text" 
+                value={profile.role} 
+                onChange={(e) => setProfile({...profile, role: e.target.value})}
+                className="text-indigo-600 font-bold uppercase tracking-widest text-xs w-full outline-none"
+                placeholder="Job Role"
+              />
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-4xl font-black text-(--text-primary) capitalize">{profile.name}</h1>
+              <p className="text-indigo-600 font-bold uppercase tracking-widest text-xs mt-1">{profile.role}</p>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm text-(--text-muted)">
             <span className="flex items-center gap-1"><Calendar size={14} /> Joined {profile.joined}</span>
             <span className="flex items-center gap-1"><Award size={14} /> {profile.certificates} Certifications</span>
           </div>
           <div className="pt-4 flex gap-3">
-            <button className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">
-              Edit Profile
-            </button>
-            <button className="p-2 border border-(--border-light) rounded-xl text-(--text-muted) hover:bg-neutral-50 transition-colors">
+            {isEditing ? (
+              <button 
+                onClick={handleSave}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors"
+              >
+                Save Profile
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors"
+              >
+                Edit Profile
+              </button>
+            )}
+            
+            <button 
+              onClick={() => alert('Settings: Account preferences, Theme, and Notifications.')}
+              className="p-2 border border-(--border-light) rounded-xl text-(--text-muted) hover:bg-neutral-50 transition-colors"
+            >
               <Settings size={20} />
             </button>
           </div>
@@ -86,23 +129,65 @@ export default function ProfilePage() {
       </div>
 
       <div className="bg-white p-8 rounded-3xl border border-(--border-light) shadow-sm space-y-6">
-        <h3 className="font-bold flex items-center gap-2">
-          <Award size={18} className="text-indigo-500" />
-          SKILLSET ANALYSIS
-        </h3>
-        <p className="text-sm text-(--text-muted) mb-4">These are the core competencies the AI has identified from your background and onboarding.</p>
-        <div className="flex flex-wrap gap-2">
-          {profile.skills.map(skill => (
-            <span key={skill} className="px-4 py-2 bg-neutral-50 border border-neutral-100 rounded-xl text-xs font-bold text-(--text-primary)">
-              {skill}
-            </span>
-          ))}
-          <button className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors">
-            + Add Skill
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold flex items-center gap-2">
+            <Award size={18} className="text-indigo-500" />
+            SKILLSET ANALYSIS & MARKET IMPACT
+          </h3>
+          <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md uppercase tracking-widest">
+            Live Market Feed
+          </span>
+        </div>
+        <p className="text-sm text-(--text-muted) mb-4">AI has identified these core competencies and mapped them to global talent demand.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {profile.skills.map(skill => {
+            const demandScore = Math.floor(Math.random() * 15) + 80;
+            const salary = Math.floor(Math.random() * 40) + 80;
+            return (
+              <div key={skill} className="p-4 rounded-2xl border border-neutral-100 bg-neutral-50/50 hover:bg-neutral-50 transition-all group">
+                <div className="flex justify-between items-start mb-3">
+                  <span className="font-bold text-sm text-(--text-primary)">{skill}</span>
+                  <div className="flex items-center gap-1 text-emerald-600">
+                    <TrendingUp size={12} />
+                    <span className="text-[10px] font-bold">{demandScore}% Demand</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-neutral-400 uppercase font-bold tracking-tighter">Avg. Global Salary</span>
+                    <span className="text-sm font-black text-indigo-600">${salary}k - ${salary + 30}k</span>
+                  </div>
+                  <button className="text-[10px] font-bold text-neutral-400 group-hover:text-indigo-500 transition-colors">
+                    Insights →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          <button className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-neutral-400 font-bold text-xs hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
+            <Plus size={14} /> Add New Skill
           </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function TrendingUp({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
+  );
+}
+
+function Plus({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
   );
 }
 

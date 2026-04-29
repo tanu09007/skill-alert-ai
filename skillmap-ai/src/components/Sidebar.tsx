@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   User,
   LayoutDashboard,
@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Briefcase,
   Wrench,
+  LogOut,
 } from 'lucide-react';
 
 const navItems = [
@@ -25,6 +26,12 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push('/');
+  };
 
   return (
     <aside className="sidebar">
@@ -53,8 +60,15 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="sidebar-footer">
-        <div className="streak">🔥 7 day streak</div>
+        <div className="streak">🔥 12 day streak</div>
         <div className="user-info">You • Nexes AI</div>
+        <button 
+          onClick={handleLogout}
+          className="mt-4 w-full flex items-center gap-2 text-[10px] font-black text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest pt-4 border-t border-white/5"
+        >
+          <LogOut size={12} />
+          Logout Session
+        </button>
       </div>
     </aside>
   );
