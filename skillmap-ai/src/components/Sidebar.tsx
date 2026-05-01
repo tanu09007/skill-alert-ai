@@ -60,8 +60,19 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="sidebar-footer">
+        {/* New N Logo & User Info moved above the streak */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
+            <span className="text-white font-black text-sm">N</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-(--text-primary)">Nexes AI</span>
+            <span className="text-[10px] text-(--text-muted) uppercase tracking-widest font-bold">Pro Member</span>
+          </div>
+        </div>
+
         <div className="streak">🔥 12 day streak</div>
-        <div className="user-info">You • Nexes AI</div>
+        
         <button 
           onClick={handleLogout}
           className="mt-4 w-full flex items-center gap-2 text-[10px] font-black text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest pt-4 border-t border-white/5"

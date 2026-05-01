@@ -1,14 +1,14 @@
 # 🚀 SkillAlert AI
 ### Bridging the University-Industry Skill Gap with Agentic AI
 
-**SkillAlert AI** is a professional career intelligence platform designed to help students transition from academic learning to industry-ready expertise. By analyzing university curricula and mapping them against real-time global talent demand, SkillAlert AI generates personalized, adaptive learning pathways.
+**SkillAlert AI** is a professional career intelligence platform designed to help learners transition from academic learning to industry-ready expertise. By analyzing university curricula and mapping them against real-time global talent demand, SkillAlert AI generates personalized, adaptive learning pathways.
 
 ---
 
 ## ✨ Core Features
 
 ### 1. **AI-Driven Personalized Roadmaps**
-- **Dynamic Curriculum Analysis**: Integrates with Google Gemini to analyze university syllabi and identify critical skill gaps.
+- **Dynamic Curriculum Analysis**: Integrates with Google Gemini to analyze syllabi and identify critical skill gaps.
 *   **Adaptive Learning**: Generates a step-by-step 8-week roadmap tailored to specific roles like AI Agent Architect, Full-Stack Developer, or Data Engineer.
 
 ### 2. **Dynamic Intelligence Dashboard**

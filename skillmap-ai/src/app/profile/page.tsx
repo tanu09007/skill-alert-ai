@@ -5,18 +5,24 @@ import { User, Award, BookOpen, Target, Settings } from 'lucide-react';
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [newSkill, setNewSkill] = useState('');
+  const [showSkillInput, setShowSkillInput] = useState(false);
   const [profile, setProfile] = useState({
     name: 'User',
     role: 'AI Agent Architect',
-    joined: 'April 2026',
+    joined: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
     completed: 0,
     certificates: 0,
     skills: ['Python', 'React', 'TypeScript', 'Node.js']
   });
+  const [goals, setGoals] = useState(['Mastering Core Fundamentals', 'Building Industry Projects', 'Getting Certified']);
 
   useEffect(() => {
     const savedName = localStorage.getItem('nexes_user_name');
+    const savedRole = localStorage.getItem('nexes_user_role');
     const savedEmail = localStorage.getItem('nexes_user_email');
+    const savedSkills = localStorage.getItem('nexes_user_skills');
+    const savedMastery = localStorage.getItem('nexes_overall_mastery');
     
     if (savedName) {
       setProfile(prev => ({ ...prev, name: savedName }));
@@ -26,12 +32,53 @@ export default function ProfilePage() {
         name: savedEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ') || 'Nexes Learner'
       }));
     }
+
+    if (savedMastery) {
+      setProfile(prev => ({ 
+        ...prev, 
+        completed: parseInt(savedMastery, 10),
+        certificates: Math.floor(parseInt(savedMastery, 10) / 25) 
+      }));
+    }
+
+    if (savedRole) {
+      setProfile(prev => ({ ...prev, role: savedRole }));
+      
+      // Fetch dynamic goals from Gemini
+      fetch('http://localhost:8000/api/role-details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: savedRole })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.goals) setGoals(data.goals);
+      })
+      .catch(console.error);
+    }
+
+    if (savedSkills) {
+      setProfile(prev => ({ ...prev, skills: JSON.parse(savedSkills) }));
+    }
   }, []);
 
   const handleSave = () => {
     localStorage.setItem('nexes_user_name', profile.name);
+    localStorage.setItem('nexes_user_role', profile.role);
+    localStorage.setItem('nexes_user_skills', JSON.stringify(profile.skills));
     setIsEditing(false);
     alert('Profile updated successfully!');
+  };
+
+  const handleAddSkill = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (newSkill.trim()) {
+      const updatedSkills = [...profile.skills, newSkill.trim()];
+      setProfile({ ...profile, skills: updatedSkills });
+      localStorage.setItem('nexes_user_skills', JSON.stringify(updatedSkills));
+      setNewSkill('');
+      setShowSkillInput(false);
+    }
   };
 
   return (
@@ -118,7 +165,7 @@ export default function ProfilePage() {
             LEARNING GOALS
           </h3>
           <ul className="space-y-3">
-            {['Master Vector DBs', 'Deploy 3 Multi-Agent Systems', 'Get Certified in LLM Ops'].map(goal => (
+            {goals.map(goal => (
               <li key={goal} className="flex items-center gap-3 text-sm text-(--text-secondary) font-medium">
                 <div className="w-2 h-2 rounded-full bg-indigo-400" />
                 {goal}
@@ -142,8 +189,11 @@ export default function ProfilePage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {profile.skills.map(skill => {
-            const demandScore = Math.floor(Math.random() * 15) + 80;
-            const salary = Math.floor(Math.random() * 40) + 80;
+            // Deterministic numbers based on the skill string so they don't change on re-render
+            const hash = skill.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const demandScore = (hash % 15) + 80;
+            const salary = (hash % 40) + 80;
+            
             return (
               <div key={skill} className="p-4 rounded-2xl border border-neutral-100 bg-neutral-50/50 hover:bg-neutral-50 transition-all group">
                 <div className="flex justify-between items-start mb-3">
@@ -158,16 +208,42 @@ export default function ProfilePage() {
                     <span className="text-[9px] text-neutral-400 uppercase font-bold tracking-tighter">Avg. Global Salary</span>
                     <span className="text-sm font-black text-indigo-600">${salary}k - ${salary + 30}k</span>
                   </div>
-                  <button className="text-[10px] font-bold text-neutral-400 group-hover:text-indigo-500 transition-colors">
-                    Insights →
+                  <button 
+                    onClick={() => {
+                      const updated = profile.skills.filter(s => s !== skill);
+                      setProfile({...profile, skills: updated});
+                      localStorage.setItem('nexes_user_skills', JSON.stringify(updated));
+                    }}
+                    className="text-[10px] font-bold text-rose-300 hover:text-rose-500 transition-colors"
+                  >
+                    Remove
                   </button>
                 </div>
               </div>
             );
           })}
-          <button className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-neutral-400 font-bold text-xs hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2">
-            <Plus size={14} /> Add New Skill
-          </button>
+          
+          {showSkillInput ? (
+            <form onSubmit={handleAddSkill} className="p-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50/30 flex items-center gap-2">
+              <input 
+                autoFocus
+                type="text" 
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onBlur={() => !newSkill && setShowSkillInput(false)}
+                placeholder="Type skill & press Enter"
+                className="bg-transparent border-none outline-none text-xs font-bold text-indigo-900 flex-1"
+              />
+              <button type="submit" className="text-indigo-600 font-bold text-[10px] uppercase tracking-tighter">Add</button>
+            </form>
+          ) : (
+            <button 
+              onClick={() => setShowSkillInput(true)}
+              className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-neutral-400 font-bold text-xs hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus size={14} /> Add New Skill
+            </button>
+          )}
         </div>
       </div>
     </div>

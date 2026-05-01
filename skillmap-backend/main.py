@@ -144,7 +144,7 @@ async def role_discovery(email: str):
 @app.post("/api/job-matches")
 async def get_job_matches(data: MatchRequest):
     """Analyze user profile and return tailored job matches."""
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
     
     prompt = f"""
     Analyze this professional profile:
@@ -191,21 +191,93 @@ async def get_job_matches(data: MatchRequest):
             ]
         }
 
+class RecommendRoleRequest(BaseModel):
+    subjects: str
+    education_level: Optional[str] = "College"
+    skills: Optional[List[str]] = []
+
+@app.post("/api/recommend-roles")
+async def recommend_roles(data: RecommendRoleRequest):
+    model = genai.GenerativeModel('gemini-flash-latest')
+    prompt = f"""
+    Based on a user studying '{data.subjects}' at '{data.education_level}' level, with current skills/experience: {', '.join(data.skills) if data.skills else 'None specified'}.
+    Recommend 5 cutting-edge, high-paying tech career roles with HIGH market demand.
+    
+    CRITICAL: For each role, you MUST provide a personalized reason why it fits them.
+    
+    For each role, provide:
+    1. Title
+    2. Demand Level (e.g. Critical, Very High, High)
+    3. Growth (e.g. 150%)
+    4. Average Salary (e.g. $120k+)
+    5. Type (EMERGING or STABLE)
+    6. Reason (personalized based on their background)
+    
+    Return ONLY a JSON list with this structure:
+    [
+      {{ "title": "Role Name", "demand": "Very High", "growth": "150%", "salary": "$120k+", "type": "EMERGING", "reason": "Short reason why" }}
+    ]
+    """
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        import json
+        roles = json.loads(text)
+        
+        # Integrate real-time Adzuna stats for each recommended role
+        for role in roles[:5]:
+            stats = await get_adzuna_stats(role["title"])
+            role["hiring_count"] = stats["count"]
+            if stats["salary"] > 50000: # If we got a real salary
+                role["salary"] = f"${stats['salary'] // 1000}k+"
+            # Ensure demand info is consistent
+            if stats["count"] > 1000:
+                role["demand"] = "Critical"
+            elif stats["count"] > 500:
+                role["demand"] = "Very High"
+        
+        return roles[:5]
+    except Exception as e:
+        print(f"Gemini error in recommend_roles: {e}")
+        return [
+            { "title": "AI Agent Architect", "demand": "Critical", "growth": "400%", "salary": "$180k+", "type": "EMERGING", "reason": "Universal high-growth field" },
+            { "title": "LLM Ops Engineer", "demand": "Very High", "growth": "250%", "salary": "$165k+", "type": "EMERGING", "reason": "High demand infrastructure role" },
+            { "title": "RAG Developer", "demand": "High", "growth": "180%", "salary": "$150k+", "type": "EMERGING", "reason": "Standard industry need" },
+            { "title": "Prompt Engineer", "demand": "Moderate", "growth": "80%", "salary": "$120k+", "type": "STABLE", "reason": "Good entry to AI" },
+            { "title": "AI Product Manager", "demand": "High", "growth": "120%", "salary": "$170k+", "type": "STABLE", "reason": "Fits management interests" }
+        ]
+
 @app.post("/api/generate-roadmap")
 async def generate_roadmap(data: RoadmapRequest):
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
     
     prompt = f"""
-    As a Silicon Valley career architect, generate a 3-step high-efficiency learning roadmap for the role: {data.role}.
+    As a Silicon Valley career architect, generate a 4-phase high-efficiency learning roadmap for the role: {data.role}.
     Current skills to build upon: {", ".join(data.current_skills)}.
+    
+    Each phase should represent a logical progression from fundamentals to production-ready skills.
+    For each phase, provide:
+    1. A main 'topic'
+    2. A list of 4-5 'sub_topics' that the user can click to learn more about.
+    3. a 'video_url' which is a YouTube search link for that specific phase topic (e.g., https://www.youtube.com/results?search_query=topic+name).
+    4. 'duration_days' (e.g. 5, 7, 10).
     
     Return ONLY a JSON object with this structure:
     {{
       "role": "{data.role}",
       "roadmap": [
-        {{ "step": 1, "topic": "string", "type": "free", "duration_days": 5, "relevance_score": 98 }},
-        {{ "step": 2, "topic": "string", "type": "free", "duration_days": 7, "relevance_score": 95 }},
-        {{ "step": 3, "topic": "string", "type": "free", "duration_days": 10, "relevance_score": 99 }}
+        {{ 
+          "step": 1, 
+          "topic": "string", 
+          "sub_topics": ["sub1", "sub2", "sub3", "sub4"],
+          "video_url": "string",
+          "type": "free", 
+          "duration_days": 5, 
+          "relevance_score": 98 
+        }},
+        ... and so on for 4 phases
       ],
       "market_relevance_score": 95,
       "completion_date": "2026-06-15"
@@ -226,13 +298,142 @@ async def generate_roadmap(data: RoadmapRequest):
         return {
             "role": data.role,
             "roadmap": [
-                {"step": 1, "topic": "Modern AI Architectures", "type": "free", "duration_days": 5, "relevance_score": 98},
-                {"step": 2, "topic": "Agentic Workflows", "type": "free", "duration_days": 7, "relevance_score": 95},
-                {"step": 3, "topic": "System Evaluation & Ops", "type": "free", "duration_days": 10, "relevance_score": 99},
+                {"step": 1, "topic": "Modern AI Architectures", "sub_topics": ["Transformer Evolution", "Encoder-Decoder models", "Context Windows"], "type": "free", "duration_days": 5, "relevance_score": 98},
+                {"step": 2, "topic": "Agentic Workflows", "sub_topics": ["Tool-Calling", "Multi-Agent Orchestration", "Stateful Agents"], "type": "free", "duration_days": 7, "relevance_score": 95},
+                {"step": 3, "topic": "Vector DB & RAG", "sub_topics": ["Semantic Search", "Metadata Filtering", "Chunking Strategies"], "type": "free", "duration_days": 10, "relevance_score": 99},
+                {"step": 4, "topic": "System Evaluation & Ops", "sub_topics": ["LLM Benchmarking", "Cost Monitoring", "Production Guardrails"], "type": "free", "duration_days": 14, "relevance_score": 97},
             ],
-            "market_relevance_score": 92,
-            "completion_date": "2026-06-30"
+            "market_relevance_score": 95,
+            "completion_date": "2026-06-15"
         }
+
+class RoleDetailRequest(BaseModel):
+    role: str
+
+@app.post("/api/role-details")
+async def get_role_details(data: RoleDetailRequest):
+    model = genai.GenerativeModel('gemini-flash-latest')
+    prompt = f"""
+    Generate 3 specific learning goals and 3 weekly projects for the role: {data.role}.
+    Goals should be action-oriented (e.g., 'Master ETL logic'). 
+    Projects should have a title and a difficulty (Easy, Medium, Hard).
+    
+    Return ONLY a JSON object:
+    {{
+      "goals": ["goal1", "goal2", "goal3"],
+      "projects": [
+        {{ "title": "Project 1", "level": "Easy" }},
+        {{ "title": "Project 2", "level": "Medium" }},
+        {{ "title": "Project 3", "level": "Hard" }}
+      ],
+      "ai_tip": "A specific piece of advice for this career path."
+    }}
+    """
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        import json
+        return json.loads(text)
+    except:
+        return {
+            "goals": ["Master Core Concepts", "Build a Portfolio Project", "Get Industry Certified"],
+            "projects": [
+                { "title": "Project 1: Foundation", "level": "Easy" },
+                { "title": "Project 2: Integration", "level": "Medium" },
+                { "title": "Project 3: Production", "level": "Hard" }
+            ],
+            "ai_tip": f"Focus on building a strong portfolio of {data.role} projects to demonstrate your practical skills."
+        }
+
+class ContentRequest(BaseModel):
+    topic: str
+
+@app.post("/api/learning-content")
+async def get_learning_content(data: ContentRequest):
+    model = genai.GenerativeModel('gemini-flash-latest')
+    prompt = f"""
+    Generate learning content for the topic: {data.topic}.
+    Provide:
+    1. 3 Flipcards (question and answer).
+    2. 3 Quiz questions (question, 4 options, and correct index).
+    
+    Return ONLY a JSON object:
+    {{
+      "flipcards": [
+        {{ "q": "string", "a": "string" }}
+      ],
+      "quiz": [
+        {{ "question": "string", "options": ["opt1", "opt2", "opt3", "opt4"], "answer": 0 }}
+      ]
+    }}
+    """
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        import json
+        return json.loads(text)
+    except:
+        return {{
+            "flipcards": [
+                {{ "q": f"What is {data.topic}?", "a": "A key industry concept." }},
+                {{ "q": "Why is it important?", "a": "It drives efficiency in modern systems." }},
+                {{ "q": "Best practice?", "a": "Always validate your outputs." }}
+            ],
+            "quiz": [
+                {{ "question": f"Which is true about {data.topic}?", "options": ["Option A", "Option B", "Option C", "Option D"], "answer": 0 }}
+            ]
+        }}
+
+class AssessmentRequest(BaseModel):
+    role: str
+    phase: str
+
+@app.post("/api/assessment-questions")
+async def get_assessment_questions(data: AssessmentRequest):
+    model = genai.GenerativeModel('gemini-flash-latest')
+    prompt = f"""
+    Generate a concise technical assessment for the role: {data.role} during {data.phase}.
+    Provide exactly 3 high-quality multiple-choice questions.
+    
+    Each question MUST include:
+    1. A clear 'text' field.
+    2. 4 'options'.
+    3. 'correct' index (0-3).
+    4. An 'explanation' field (CRITICAL): This will be shown to the user if they get it wrong. It should explain the core concept clearly and why the correct answer is right.
+    
+    Return ONLY a JSON list of 3 objects:
+    [
+      {{
+        "id": 1,
+        "text": "string",
+        "options": ["opt1", "opt2", "opt3", "opt4"],
+        "correct": 0,
+        "hint": "string",
+        "explanation": "string"
+      }}
+    ]
+    """
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        import json
+        return json.loads(text)[:3]
+    except:
+        return [
+            {
+                "id": 1,
+                "text": f"What is a core requirement for {data.role} in {data.phase}?",
+                "options": ["Scalability", "Documentation", "Testing", "All of the above"],
+                "correct": 3,
+                "hint": "Think holistically."
+            }
+        ]
 
 @app.post("/api/assessment/analyze")
 async def analyze_assessment(data: AssessmentRequest):

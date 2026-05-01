@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Wrench, 
@@ -16,7 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-const RECOMMENDATIONS = [
+const INITIAL_RECOMMENDATIONS = [
   {
     name: 'LangGraph',
     desc: 'Self-correcting, stateful multi-agent orchestration. Recommended based on your Logic & Flow skills.',
@@ -56,6 +57,27 @@ const RECOMMENDATIONS = [
 ];
 
 export default function ToolsPage() {
+  const [recommendations, setRecommendations] = useState(INITIAL_RECOMMENDATIONS);
+
+  const handleAddSignal = () => {
+    const newTech = window.prompt("Which framework or tool do you want to monitor?");
+    if (newTech && newTech.trim() !== "") {
+      const simulatedGrowth = Math.floor(Math.random() * 60) + 20;
+      
+      const newCard = {
+        name: newTech,
+        desc: `Custom intelligence stream active. Tracking GitHub and community signals for ${newTech}.`,
+        github: `search?q=${encodeURIComponent(newTech)}`,
+        growth: `+${simulatedGrowth}%`,
+        time: 'Just now',
+        type: 'Custom Signal',
+        priority: 'High'
+      };
+
+      setRecommendations([newCard, ...recommendations]);
+    }
+  };
+
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-12 min-h-screen pb-24">
       <header className="space-y-6">
@@ -78,9 +100,9 @@ export default function ToolsPage() {
       </header>
 
       <div className="space-y-4">
-        {RECOMMENDATIONS.map((tool, idx) => (
+        {recommendations.map((tool, idx) => (
           <motion.div
-            key={tool.name}
+            key={tool.name + idx}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
@@ -111,12 +133,16 @@ export default function ToolsPage() {
                   <TrendingUp size={14} /> {tool.growth} Growth
                 </div>
                 <div className="flex items-center gap-1 text-(--text-muted)">
-                  <GitBranch size={14} /> {tool.github.split('/')[1]}
+                  <GitBranch size={14} /> {tool.github.split('/')[1] || tool.name}
                 </div>
               </div>
             </div>
 
-            <Button variant="ghost" className="rounded-xl h-12 w-12 p-0 hover:bg-indigo-50 hover:text-indigo-600">
+            <Button 
+              variant="ghost" 
+              className="rounded-xl h-12 w-12 p-0 hover:bg-indigo-50 hover:text-indigo-600"
+              onClick={() => window.open(`https://github.com/${tool.github}`, '_blank')}
+            >
               <ArrowRight size={20} />
             </Button>
           </motion.div>
@@ -131,7 +157,10 @@ export default function ToolsPage() {
             Tell Nexes AI about specific frameworks you want to monitor, and we&apos;ll inject them into your stream.
           </p>
           <div className="pt-4">
-            <Button className="h-14 px-10 bg-white text-indigo-600 hover:bg-indigo-50 rounded-2xl font-bold shadow-xl">
+            <Button 
+              onClick={handleAddSignal}
+              className="h-14 px-10 bg-white text-indigo-600 hover:bg-indigo-50 rounded-2xl font-bold shadow-xl cursor-pointer"
+            >
               Configure Stream Signals
             </Button>
           </div>
@@ -140,3 +169,4 @@ export default function ToolsPage() {
     </div>
   );
 }
+

@@ -27,15 +27,39 @@ export default function LearningLoop() {
   const [synthesisInput, setSynthesisInput] = useState<string>('');
   const [synthesisResult, setSynthesisResult] = useState<any>(null);
   const [explanationStyle, setExplanationStyle] = useState<string>('ELI5');
+  const [content, setContent] = useState<any>({
+    flipcards: [
+      { q: `What is ${topic}?`, a: `A core concept in modern architecture that allows for semantic reasoning.` },
+      { q: "Why is it relevant?", a: "Market signals show high demand for this mastery." }
+    ],
+    quiz: []
+  });
 
   useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/learning-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setContent(data);
+        }
+      } catch (err) {
+        console.error("Content fetch error:", err);
+      }
+    };
+    fetchContent();
+
     const fetchVideo = async () => {
       const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
       if (!apiKey) return;
-
+      
       try {
         const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${encodeURIComponent(topic + " course tutorial")}&type=video&key=${apiKey}`
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${encodeURIComponent(topic + " tutorial")}&type=video&key=${apiKey}`
         );
         const data = await res.json();
         if (data.items && data.items.length > 0) {
@@ -48,11 +72,7 @@ export default function LearningLoop() {
     fetchVideo();
   }, [topic]);
 
-  const flipcards = [
-    { q: `What is ${topic}?`, a: `A core concept in modern architecture that allows for semantic reasoning and high-dimensional data processing.` },
-    { q: "Why is it relevant now?", a: "Market signals show a 40% spike in demand for this specific mastery over the last quarter." },
-    { q: "What's the first step?", a: "Implementing a basic prototype and validating the intelligence output against a baseline dataset." }
-  ];
+  const flipcards = content.flipcards;
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30 font-sans">

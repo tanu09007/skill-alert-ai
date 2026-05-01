@@ -32,52 +32,35 @@ export default function RoleDiscovery() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Simulate multi-signal role discovery
-    setTimeout(() => {
-      setRoles([
-        { 
-          role: "AI Agent Architect", 
-          confidence: 98, 
-          stage: "EMERGING", 
-          signals: ["GitHub: LangChain", "Arxiv: Auto-GPT"],
-          salary: "$180k - $250k",
-          demand: "Critical"
-        },
-        { 
-          role: "Prompt Engineer (LLM Ops)", 
-          confidence: 94, 
-          stage: "GROWING", 
-          signals: ["HackerNews: Prompt Engineering", "Adzuna: 1200+ jobs"],
-          salary: "$140k - $190k",
-          demand: "High"
-        },
-        { 
-          role: "Vector Database Specialist", 
-          confidence: 89, 
-          stage: "PEAK", 
-          signals: ["GitHub: Pinecone", "GitHub: Milvus"],
-          salary: "$160k - $210k",
-          demand: "High"
-        },
-        { 
-          role: "Ethical AI Auditor", 
-          confidence: 82, 
-          stage: "EMERGING", 
-          signals: ["Arxiv: AI Safety", "EU AI Act"],
-          salary: "$130k - $180k",
-          demand: "Rising"
-        },
-        { 
-          role: "RAG Systems Engineer", 
-          confidence: 91, 
-          stage: "GROWING", 
-          signals: ["HackerNews: RAG vs Fine-tuning", "GitHub: LlamaIndex"],
-          salary: "$170k - $230k",
-          demand: "Critical"
+    const fetchRoles = async () => {
+      const savedSkills = localStorage.getItem('nexes_user_skills') || '';
+      try {
+        const res = await fetch('/api/recommend-roles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_input: savedSkills || "Software Engineering, Java, Databases" })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Ensure data is an array and has the right shape
+          if (Array.isArray(data)) {
+            setRoles(data.map((r: any) => ({
+              role: r.role,
+              confidence: r.match_score || Math.floor(Math.random() * 15) + 80,
+              stage: r.market_stage || "EMERGING",
+              signals: r.key_skills ? r.key_skills.slice(0, 2) : ["Market Trend", "Rising Demand"],
+              salary: r.avg_salary || "$120k - $160k",
+              demand: r.demand_level || "High"
+            })));
+          }
         }
-      ]);
-      setLoading(false);
-    }, 2500);
+      } catch (err) {
+        console.error("Fetch roles error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoles();
   }, []);
 
   if (loading) {
@@ -115,8 +98,8 @@ export default function RoleDiscovery() {
               whileHover={{ y: -8 }}
               className="group relative"
             >
-              <div className="absolute -inset-px bg-gradient-to-b from-white/10 to-transparent rounded-[2rem] opacity-50 transition-opacity group-hover:opacity-100" />
-              <Card className="relative h-full bg-neutral-900/40 border border-white/5 rounded-[2rem] p-8 backdrop-blur-3xl overflow-hidden">
+              <div className="absolute -inset-px bg-linear-to-b from-white/10 to-transparent rounded-4xl opacity-50 transition-opacity group-hover:opacity-100" />
+              <Card className="relative h-full bg-neutral-900/40 border border-white/5 rounded-4xl p-8 backdrop-blur-3xl overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5">
                   <BarChart3 className="w-24 h-24" />
                 </div>

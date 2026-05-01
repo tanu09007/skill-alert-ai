@@ -147,7 +147,10 @@ export default function AdaptiveUpdatePage() {
             Not Now
           </button>
           <button 
-            onClick={() => router.push('/pathway')}
+            onClick={() => {
+              localStorage.setItem('nexes_user_role', topic);
+              router.push('/pathway');
+            }}
             className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors"
           >
             Update My Roadmap

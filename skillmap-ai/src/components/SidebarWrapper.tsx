@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 
 // Pages that should NOT have the sidebar (landing page)
-const NO_SIDEBAR_ROUTES = ['/'];
+const NO_SIDEBAR_ROUTES = ['/', '/onboarding'];
 
 export default function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
