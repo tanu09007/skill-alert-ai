@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Wrench, 
@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Bell,
   Search,
-  Code2
+  Code2,
+  Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,35 @@ const INITIAL_RECOMMENDATIONS = [
 
 export default function ToolsPage() {
   const [recommendations, setRecommendations] = useState(INITIAL_RECOMMENDATIONS);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch live recommendations from Gemini
+  useEffect(() => {
+    async function fetchLiveSignals() {
+      try {
+        const profileRaw = localStorage.getItem('skillmap_profile');
+        let techQuery = 'Web Development and AI';
+        if (profileRaw) {
+          const profile = JSON.parse(profileRaw);
+          if (profile.tech_stack) techQuery = profile.tech_stack;
+        }
+
+        const res = await fetch(`/api/tools-recommendations?tech=${encodeURIComponent(techQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.recommendations && data.recommendations.length > 0) {
+            setRecommendations(data.recommendations);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch live tools:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchLiveSignals();
+  }, []);
 
   const handleAddSignal = () => {
     const newTech = window.prompt("Which framework or tool do you want to monitor?");
@@ -86,21 +116,29 @@ export default function ToolsPage() {
             <Bell size={16} className="animate-bounce" />
             Intelligence Stream
           </div>
-          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 px-3 py-1 rounded-full font-bold">
-            Live Updates
+          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 px-3 py-1 rounded-full font-bold flex items-center gap-2">
+            {isLoading ? <Loader2 size={12} className="animate-spin" /> : <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+            {isLoading ? 'Fetching Live Signals...' : 'Live Updates Active'}
           </Badge>
         </div>
         
         <div className="space-y-2">
           <h1 className="text-5xl font-black text-(--text-primary) tracking-tight">Tech Recommendations</h1>
           <p className="text-(--text-secondary) text-lg max-w-xl font-light leading-relaxed">
-            Personalized alerts for high-growth technologies mapped to your skill profile and GitHub demand signals.
+            {isLoading 
+              ? "Analyzing your profile and scanning current market trends to find the best tools for you..."
+              : "Personalized alerts for high-growth technologies mapped to your skill profile and market demand."}
           </p>
         </div>
       </header>
 
       <div className="space-y-4">
-        {recommendations.map((tool, idx) => (
+        {isLoading && recommendations === INITIAL_RECOMMENDATIONS ? (
+          <div className="flex justify-center py-12">
+            <Loader2 size={48} className="animate-spin text-indigo-200" />
+          </div>
+        ) : (
+          recommendations.map((tool, idx) => (
           <motion.div
             key={tool.name + idx}
             initial={{ opacity: 0, x: -20 }}
@@ -146,7 +184,8 @@ export default function ToolsPage() {
               <ArrowRight size={20} />
             </Button>
           </motion.div>
-        ))}
+          ))
+        )}
       </div>
 
       <footer className="bg-indigo-600 rounded-[3rem] p-10 text-center space-y-6 relative overflow-hidden group">

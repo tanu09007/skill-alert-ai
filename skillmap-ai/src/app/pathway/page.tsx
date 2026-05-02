@@ -332,12 +332,10 @@ function PathwayContent() {
                     ) : videos.length > 0 ? (
                       <div className="space-y-4">
                         {videos.map((video, vIdx) => (
-                          <a 
+                          <div 
                             key={vIdx}
-                            href={video.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group flex gap-4 p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-indigo-500/30 transition-all"
+                            onClick={() => router.push(`/learning-loop?topic=${encodeURIComponent(activeDay.topic)}&videoId=${video.videoId}`)}
+                            className="group flex gap-4 p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-indigo-500/30 transition-all cursor-pointer"
                           >
                             <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 relative">
                               <img src={video.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -349,7 +347,7 @@ function PathwayContent() {
                               <p className="text-xs font-bold line-clamp-2 mb-1 group-hover:text-indigo-400 transition-colors">{video.title}</p>
                               <p className="text-[10px] text-white/40">{video.channel}</p>
                             </div>
-                          </a>
+                          </div>
                         ))}
                       </div>
                     ) : (

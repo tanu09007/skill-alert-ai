@@ -119,6 +119,23 @@ export default function AssessmentPage() {
         });
         const data = await res.json();
         setEvalResult(data);
+
+        // Update progress in database for real-time dashboard
+        const userId = user?.id || localStorage.getItem('nexes_user_email');
+        if (userId) {
+          await fetch('/api/update-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              topic,
+              score: data.score,
+              type: 'assessment_done',
+              weak_topics: data.weak_concepts || []
+            })
+          });
+        }
+
         setState('summary');
       } catch (err) {
         console.error(err);
@@ -176,6 +193,26 @@ export default function AssessmentPage() {
   }
 
   if (state === 'testing') {
+    if (!questions || questions.length === 0 || !questions[currentIdx]) {
+      return (
+        <div className="min-h-screen bg-slate-50 py-12 px-4 flex justify-center items-center">
+          <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl text-center border border-rose-100">
+            <XCircle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Unable to Load Questions</h2>
+            <p className="text-slate-600 mb-8 leading-relaxed">
+              We encountered an error while generating your assessment. This is usually due to high traffic or API limits.
+            </p>
+            <button 
+              onClick={() => loadAssessment()}
+              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     const q = questions[currentIdx];
     const diffColor = q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
     

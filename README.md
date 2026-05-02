@@ -5,26 +5,36 @@
 
 ---
 
-## ✨ Core Features
+## 🌪️ The "Fantastic Flaws" of Traditional Education We Solve
 
-### 1. **AI-Driven Personalized Roadmaps**
+Traditional learning is broken. We've identified the most critical flaws and engineered SkillAlert AI to turn them into strengths:
+
+1.  **The Static Syllabus Flaw**: Curricula are often years out of date. 
+    *   **Our Solution**: **Live Market Pulsar** — We sync with HackerNews and global job boards to keep your roadmap current with *this morning's* tech trends.
+2.  **The "One Size Fits All" Flaw**: Every student follows the same path regardless of their background.
+    *   **Our Solution**: **Hyper-Personalized Agents** — Our AI analyzes your specific university syllabus and university background to find *your* unique gap.
+3.  **The Feedback Void**: You don't know what you don't know until the final exam.
+    *   **Our Solution**: **Adaptive Learning Loops** — 3-question micro-assessments that adapt to your failures, providing instant recap and reinforcement.
+
+---
+
+## ✨ Fantastic Core Features
+
+### 1. **AI-Driven Personalized Roadmaps** 🗺️
 - **Dynamic Curriculum Analysis**: Integrates with Google Gemini to analyze syllabi and identify critical skill gaps.
 *   **Adaptive Learning**: Generates a step-by-step 8-week roadmap tailored to specific roles like AI Agent Architect, Full-Stack Developer, or Data Engineer.
 
-### 2. **Dynamic Intelligence Dashboard**
+### 2. **Dynamic Intelligence Dashboard** ⚡
 *   **Live Market Signals**: A real-time ticker fetching the latest tech trends and breaking news directly from **HackerNews**.
 *   **Progress Analytics**: Visualizes your learning journey with a 12-day streak, completion percentages, and an overall Intelligence Score.
 
-### 3. **Skill Mastery Analysis**
+### 3. **Skill Mastery Analysis** 📊
 *   **Radar Chart Visualization**: A multi-dimensional SVG chart that tracks your expertise across LLM Ops, Vector DBs, and Orchestration.
 *   **Targeted Review**: Identifies weak topics (e.g., "Vector Embedding Optimization") and offers adaptive learning loops to strengthen them.
 
-### 4. **Verified Portfolio Generator**
+### 4. **Verified Portfolio Generator** 🛠️
 *   **GitHub Integration**: Instantly generates a professional portfolio by fetching real-time repository data.
 *   **Market Impact Metrics**: Maps your skills to global talent demand scores and average salary data to show real-world value.
-
-### 5. **Intelligence Stream**
-*   **High-Growth Notifications**: Notifies users about emerging technologies (e.g., "Mojo", "Agentic Workflows") to keep them ahead of the curve.
 
 ---
 
@@ -32,16 +42,15 @@
 
 ### **Frontend**
 - **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
+- **Styling**: Tailwind CSS & Framer Motion
 - **Icons**: Lucide React
 - **Data Fetching**: GitHub API, HackerNews API
 
 ### **Backend**
 - **Framework**: FastAPI (Python)
-- **AI Brain**: Google Gemini API, Groq (Llama-3/Mistral)
+- **AI Brain**: Google Gemini API & Groq (Llama-3.3-70b)
 - **Database**: Supabase (Postgres)
-- **Validation**: Pydantic
+- **Orchestration**: Agentic Workflows for roadmap generation
 
 ---
 

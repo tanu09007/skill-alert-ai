@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { 
   ChevronRight, 
@@ -18,8 +19,9 @@ export default function LearningLoop() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topic = searchParams.get('topic') || 'Vector Databases';
+  const urlVideoId = searchParams.get('videoId') || '';
 
-  const [videoId, setVideoId] = useState<string>('');
+  const [videoId, setVideoId] = useState<string>(urlVideoId);
   const [activeTab, setActiveTab] = useState<string>('video'); // video, flipcards, quiz
   const [flipped, setFlipped] = useState<boolean>(false);
   const [currentCard, setCurrentCard] = useState<number>(0);
@@ -38,7 +40,7 @@ export default function LearningLoop() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/learning-content', {
+        const res = await fetch('/api/learning-content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ topic })
@@ -48,12 +50,14 @@ export default function LearningLoop() {
           setContent(data);
         }
       } catch (err) {
-        console.error("Content fetch error:", err);
+        console.warn("Content fetch error (using defaults):", err);
       }
     };
     fetchContent();
 
     const fetchVideo = async () => {
+      if (urlVideoId) return; // Skip if we already have one from URL
+      
       const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
       if (!apiKey) return;
       
@@ -256,7 +260,22 @@ export default function LearningLoop() {
 
                    <Button 
                     disabled={!synthesisInput}
-                    onClick={() => setSynthesisResult({})}
+                    onClick={async () => {
+                      setSynthesisResult({});
+                      const { data: { user } } = await supabase.auth.getUser();
+                      const userId = user?.id || localStorage.getItem('nexes_user_email');
+                      if (userId) {
+                        fetch('/api/update-progress', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            user_id: userId,
+                            topic,
+                            type: 'synthesis_done'
+                          })
+                        });
+                      }
+                    }}
                     className="w-full h-16 bg-white text-black hover:bg-neutral-200 rounded-2xl text-xl font-bold"
                    >
                     Analyse My Synthesis
@@ -386,7 +405,22 @@ export default function LearningLoop() {
           </div>
 
           <Button
-            onClick={() => router.push(`/assessment?topic=${encodeURIComponent(topic)}`)}
+            onClick={async () => {
+              const { data: { user } } = await supabase.auth.getUser();
+              const userId = user?.id || localStorage.getItem('nexes_user_email');
+              if (userId) {
+                await fetch('/api/update-progress', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    user_id: userId,
+                    topic: topic,
+                    type: 'video_watched'
+                  })
+                });
+              }
+              router.push(`/assessment?topic=${encodeURIComponent(topic)}`);
+            }}
             className="h-16 px-10 bg-white text-black hover:bg-neutral-200 rounded-2xl text-lg font-bold group"
           >
             Advance to Assessment <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

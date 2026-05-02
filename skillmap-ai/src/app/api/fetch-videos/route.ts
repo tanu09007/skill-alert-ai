@@ -69,6 +69,7 @@ export async function POST(req: Request) {
     // Transform and filter
     const videos = ytData.items.map((item: any) => ({
       title: item.snippet.title,
+      videoId: item.id.videoId,
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       thumbnail: item.snippet.thumbnails.high.url,
       channel: item.snippet.channelTitle,
